@@ -34,7 +34,7 @@ const Login = () => {
           <div style={{ fontSize: '2.5rem', color: 'var(--primary)' }}>
             <i className="bi bi-calendar-check-fill"></i>
           </div>
-          <h2 className="fw-bold mt-2">Welcome Back</h2>
+          <h2 className="fw-bold mt-2">Welome Back</h2>
           <p className="text-muted">Sign in to your account</p>
         </div>
 
