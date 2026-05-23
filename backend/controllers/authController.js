@@ -21,7 +21,8 @@ export const register = async (req, res) => {
       otp, otpExpiry,
     });
 
-    await sendOTPEmail(email, otp);
+    // Send email without awaiting, to prevent the API from hanging if the SMTP server is slow/unreachable.
+    sendOTPEmail(email, otp).catch(err => console.error('Background Email Error:', err));
 
     return successResponse(res, { userId: user._id }, 'Registered! Check your email for OTP.', 201);
   } catch (err) {
