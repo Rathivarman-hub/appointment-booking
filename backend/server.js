@@ -15,7 +15,13 @@ connectDB(); // Initialize Database Connection
 app.set('trust proxy', 1);
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://bookingplatform-five.vercel.app',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
