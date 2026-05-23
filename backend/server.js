@@ -17,7 +17,7 @@ app.set('trust proxy', 1);
 // ─── Middlewares ──────────────────────────────────────────────────────────────
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://bookingplatform-five.vercel.app',
+  'https://booking-platform-lime-alpha.vercel.app',
   process.env.CLIENT_URL
 ].filter(Boolean);
 
