@@ -1,4 +1,4 @@
-name: Deploy MERN App to EC2
+name: Deploy MERN App to Render
 
 on:
   push:
@@ -12,12 +12,6 @@ jobs:
       - name: Checkout the Code
         uses: actions/checkout@v3
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /home/ec2-user/hackathon-booking
-            ./deploy.sh
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
