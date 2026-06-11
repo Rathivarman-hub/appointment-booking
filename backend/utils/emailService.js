@@ -1,26 +1,74 @@
-import nodemailer from 'nodemailer';
-
-const transporter = nodemailer.createTransport({
-  host:   process.env.EMAIL_HOST,
-  port:   parseInt(process.env.EMAIL_PORT),
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+import { google } from 'googleapis';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const sendEmail = async ({ to, subject, html }) => {
-  const mailOptions = {
-    from: `"Hackathon Booking" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
-  };
+let auth = null;
+
+const initializeAuth = async () => {
+  if (auth) return auth;
+
   try {
-    await transporter.sendMail(mailOptions);
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+    if (!clientId || !clientSecret || !refreshToken) {
+      throw new Error(
+        'OAuth2 credentials missing. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN env vars'
+      );
+    }
+
+    auth = new google.auth.OAuth2(clientId, clientSecret);
+    auth.setCredentials({ refresh_token: refreshToken });
+
+    return auth;
+  } catch (err) {
+    console.error('❌ Gmail API initialization failed:', err.message);
+    throw err;
+  }
+};
+
+/**
+ * Send email via Gmail API using OAuth2
+ */
+const sendEmail = async ({ to, subject, html }) => {
+  try {
+    const authClient = await initializeAuth();
+    const gmail = google.gmail({ version: 'v1', auth: authClient });
+
+    const fromEmail = process.env.GMAIL_USER;
+    if (!fromEmail) {
+      throw new Error('GMAIL_USER environment variable must be set');
+    }
+
+    // Create email in RFC 2822 format
+    const emailLines = [
+      `From: "Hackathon Booking" <${fromEmail}>`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset="UTF-8"',
+      '',
+      html,
+    ];
+
+    const message = emailLines.join('\r\n');
+    const encodedMessage = Buffer.from(message)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage,
+      },
+    });
+
+    if (!isProduction) {
+      console.log(`✅ [Gmail API] Email sent to ${to}`);
+    }
   } catch (err) {
     if (!isProduction) {
       console.warn('⚠️ Email send failed (dev – request continues):', err.message);
@@ -30,6 +78,9 @@ const sendEmail = async ({ to, subject, html }) => {
   }
 };
 
+/**
+ * Send OTP verification email
+ */
 const sendOTPEmail = (to, otp) => {
   if (!isProduction) {
     console.log(`🔑 [dev] OTP for ${to}: ${otp}`);
@@ -48,6 +99,9 @@ const sendOTPEmail = (to, otp) => {
   });
 };
 
+/**
+ * Send booking confirmation email
+ */
 const sendBookingConfirmationEmail = (to, booking) =>
   sendEmail({
     to,
@@ -62,6 +116,9 @@ const sendBookingConfirmationEmail = (to, booking) =>
     `,
   });
 
+/**
+ * Send password reset email
+ */
 const sendPasswordResetEmail = (to, resetLink) =>
   sendEmail({
     to,
@@ -76,3 +133,5 @@ const sendPasswordResetEmail = (to, resetLink) =>
   });
 
 export { sendOTPEmail, sendBookingConfirmationEmail, sendPasswordResetEmail };
+
+

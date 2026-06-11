@@ -65,7 +65,6 @@ const App = () => {
           autoClose={3000}
           hideProgressBar={false}
           newestOnTop
-          closeOnClick
           pauseOnHover
           theme="colored"
         />
