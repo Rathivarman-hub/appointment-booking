@@ -14,8 +14,28 @@ connectDB(); // Initialize Database Connection
 // CRA dev proxy sends X-Forwarded-For; required for express-rate-limit
 app.set('trust proxy', 1);
 
+// ─── CORS Configuration ───────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',      // Local development
+  'http://localhost:3000',      // Alternate local port
+  'https://hackathon-booking.vercel.app', // Production
+  'https://hackathon-booking.onrender.com', // Render backend
+  process.env.CLIENT_URL && process.env.CLIENT_URL.replace(/\/api.*/, '') // From .env
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+};
+
 // ─── Middlewares ──────────────────────────────────────────────────────────────
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
