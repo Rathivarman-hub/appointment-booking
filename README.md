@@ -1,4 +1,4 @@
-# Virtual Hackathon Booking Platform
+#  Appointment Booking Platform
 
 ## Introduction
 The Virtual Hackathon Booking Platform is a full-stack web application designed to allow users to seamlessly register and manage their participation in virtual hackathons.
